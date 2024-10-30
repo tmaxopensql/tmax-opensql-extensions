@@ -1,0 +1,23 @@
+os:
+  name: rockylinux
+  version: 8.10
+
+database:
+  name: postgresql
+  version: 15.8
+
+extensions:
+  - name: pgaudit
+    version: 1.7.0
+    source: https://github.com/pgaudit/pgaudit/archive/refs/tags/{version}.zip
+    build: make USE_PGXS=1 PG_CONFIG=/usr/pgsql-{db_major_version}/bin/pg_config
+
+  - name: system_stats
+    version: 3.2
+    source: https://github.com/EnterpriseDB/system_stats/archive/refs/tags/v{version}.zip
+    build: make USE_PGXS=1
+
+  - name: credcheck
+    version: 2.8.0
+    source: https://github.com/MigOpsRepos/credcheck/archive/refs/tags/v{major_version}.{minor_version}.zip
+    build: make

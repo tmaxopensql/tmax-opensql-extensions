@@ -1,0 +1,43 @@
+os:
+  oraclelinux:
+    group: redhat
+    repository:
+      type: docker
+      value: oraclelinux
+    epel_settings:
+      common:
+        - dnf -y install epel-release
+        - dnf config-manager --enable ol{os_major_version}_codeready_builder
+  rockylinux:
+    group: redhat
+    repository:
+      type: docker
+      value: rockylinux/rockylinux
+    epel_settings:
+      "8":
+        - dnf -y install epel-release
+        - dnf config-manager --set-enabled powertools
+      "9":
+        - dnf -y install epel-release
+        - crb enable
+        - dnf config-manager --set-enabled crb
+database:
+  postgresql:
+    install_commands:
+      redhat:
+        - dnf install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-{os_major_version}-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+        - dnf -qy module disable postgresql
+        - dnf install -y postgresql{db_major_version}-server-{db_version}
+        - dnf install -y postgresql{db_major_version}-devel-{db_version}
+        - dnf install -y make gcc redhat-rpm-config openssl-devel clang llvm tar findutils unzip
+        - sh -c "echo 'export PATH=$PATH:/usr/pgsql-{db_major_version}/bin/' >> ~/.bash_profile"
+prebuilt_extension_download_url: https://raw.githubusercontent.com/tmaxopensql/tmax-opensql-extensions/refs/heads/main/{name}/{version}/{name}-{version}-{os_name}{os_major_version}-pg{db_major_version}.tar
+upload_command: >
+  curl -s -L
+  -X PUT
+  -H "Accept: application/vnd.github+json"
+  -H "Authorization: Bearer {upload_access_token}"
+  -H "X-GitHub-Api-Version: 2022-11-28"
+  https://api.github.com/repos/tmaxopensql/tmax-opensql-extensions/contents/{upload_file_path}
+  -d @{upload_json_path}
+upload_token_env_key: OPENSQL_EXTENSION_BUILDER_ACCESS_TOKEN
