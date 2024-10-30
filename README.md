@@ -1,8 +1,9 @@
 # OpenSQL Extensions
 
-- OpenSQL 설치 패키지에 포함되는 pg extension들을 미리 빌드한 파일을 업로드한 저장소입니다
+- 특정 OS, PG 버전의 환경에서 빌드 자동화 도구 `make`를 이용하여 미리 빌드한 파일을 업로드한 pg extension 빌드 파일 저장소입니다
 
-- [tmax-opensql-packager](https://github.com/tmaxopensql/tmax-opensql-packager) (OpenSQL 설치 패키지 생성 툴)과 연계하여, OpenSQL 설치 패키지를 생성하는 과정에서 이 저장소에 업로드된 pg extension의 파일을 OpenSQL 설치 패키지에 포함시킵니다
+- [tmax-opensql-packager](https://github.com/tmaxopensql/tmax-opensql-packager)(OpenSQL 설치 패키지 생성 툴)를 통해 특정 os 및 pg 버전 맞춤형 OpenSQL 설치 패키지를 생성할 때, OpenSQL 패키지에 포함시킬 pg extension을 패키지 툴이 매번 직접 빌드하는 반복작업을 생략하기 위해 이 저장소를 활용합니다.  
+    OpenSQL 설치 패키지 생성 툴은 패키지 생성 중에 이 저장소에서 PG,OS버전에 맞는 extension 빌드파일을 참조하여 OpenSQL 패키지에 자동으로 포함시킵니다
 
 - extension 파일들은 os, pg의 버전정보에 따라 다음과 같은 규칙을 가진 파일 경로로 저장합니다  
     `{이름}/{버전}/{이름}-{버전}-{OS이름}{OS메이저버전}-pg{PG메이저버전}.tar`
