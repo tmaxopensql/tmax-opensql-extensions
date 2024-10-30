@@ -358,7 +358,7 @@ def build_and_upload_pg_extensions(build_target_extensions: list, format_argumen
         execute_and_log_container('sh -c "echo \'\\\"}\' >> upload.json"', container, container_log, build_dir)
 
         upload_command_arguments = {
-            'upload_access_token': getenv(metadata['upload_token_env_key']),
+            'upload_access_token': upload_access_token,
             'upload_file_path': f'{extension[name]}/{extension[version]}/{prebuilt_package_name}',
             'upload_json_path': f'{build_dir}/upload.json'
         }
