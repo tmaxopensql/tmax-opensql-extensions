@@ -214,7 +214,7 @@ def get_os_docker_image(os_name, os_version, docker_client):
 
     return docker_image
 
-def execute_and_log_container(command: str, container: Container, log: BufferedWriter, workdir=None) -> ExecResult:
+def execute_and_log_container(command: str, container: Container, log: BufferedWriter, workdir: str=None) -> ExecResult:
 
     log.write(f'\n[{datetime.now()}] {command}\n'.encode())
 
@@ -297,7 +297,7 @@ def build_and_upload_pg_extensions(build_target_extensions: list, format_argumen
             continue
 
         # download build source file
-        result = execute_and_log_container(f'curl -L -s -O {build_source_url}', container, container_log, workdir=f'/{extension[name]}')
+        result = execute_and_log_container(f'curl -L -s -O {build_source_url}', container, container_log, f'/{extension[name]}')
 
         if result.exit_code != 0:
             print(f'[ERROR] download source for extension({extension[name]}) is failed.\n{result.output.decode()}')
@@ -306,27 +306,27 @@ def build_and_upload_pg_extensions(build_target_extensions: list, format_argumen
         extract_command = None
 
         # extract build source
-        result = execute_and_log_container('sh -c "[ -f *.zip ]"', container, container_log, workdir=f'/{extension[name]}')
+        result = execute_and_log_container('sh -c "[ -f *.zip ]"', container, container_log, f'/{extension[name]}')
         if result.exit_code == 0:
             extract_command = 'unzip -o *.zip'
 
-        result = execute_and_log_container('sh -c "[ -f *.tar ]"', container, container_log, workdir=f'/{extension[name]}')
+        result = execute_and_log_container('sh -c "[ -f *.tar ]"', container, container_log, f'/{extension[name]}')
         if result.exit_code == 0:
             extract_command = 'tar -xvf *.tar'
 
-        result = execute_and_log_container('sh -c "[ -f *.gz ]"', container, container_log, workdir=f'/{extension[name]}')
+        result = execute_and_log_container('sh -c "[ -f *.gz ]"', container, container_log, f'/{extension[name]}')
         if result.exit_code == 0:
             extract_command = 'tar -xvzf *.tar'
 
         if extract_command is not None:
-            result = execute_and_log_container(extract_command, container, container_log, workdir=f'/{extension[name]}')
+            result = execute_and_log_container(extract_command, container, container_log, f'/{extension[name]}')
 
         if extract_command is None or result.exit_code!=0:
             print(f'[ERROR] extract source for extension({extension[name]}) is failed.\n{result.output.decode()}')
             continue
 
         # get an absolute path of Makefile of this extension build source
-        result = execute_and_log_container('sh -c "realpath $(dirname $(find -type f -name Makefile | head -n 1))"', container, container_log, workdir=f'/{extension[name]}')
+        result = execute_and_log_container('sh -c "realpath $(dirname $(find -type f -name Makefile | head -n 1))"', container, container_log, f'/{extension[name]}')
 
         if result.exit_code != 0:
             print(f'[ERROR] there is no Makefile for source of extension({extension[name]})')
@@ -336,7 +336,7 @@ def build_and_upload_pg_extensions(build_target_extensions: list, format_argumen
         build_command = extension[build].format(**format_arguments)
 
         # execute make command for build
-        result = execute_and_log_container(f'bash --login -c "{build_command}"', container, container_log, workdir=build_dir)
+        result = execute_and_log_container(f'bash --login -c "{build_command}"', container, container_log, build_dir)
 
         if result.exit_code != 0:
             print(f'[ERROR] build {extension[name]} is failed.\n{result.output.decode()}')
@@ -344,8 +344,12 @@ def build_and_upload_pg_extensions(build_target_extensions: list, format_argumen
 
         prebuilt_package_name = f'{extension[name]}-{extension[version]}-{spec[os][name]}{spec[os][version].split('.')[0]}-pg{spec[database][version].split('.')[0]}.tar'
 
+        # create 'make install' arguments description
+        install_command = build_command.replace('make', 'make install', 1)
+        result = execute_and_log_container(f'sh -c "echo \'{install_command}\' >> install"', container, container_log, build_dir)
+
         # packaging
-        result = execute_and_log_container(f'tar -cvf {prebuilt_package_name} .', container, container_log, workdir=build_dir)
+        result = execute_and_log_container(f'tar -cvf {prebuilt_package_name} .', container, container_log, build_dir)
 
         if result.exit_code != 0:
             print(f'[ERROR] packaging {extension[name]} is failed.\n{result.output.decocde()}')
